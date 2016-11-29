@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: SystemApplication
+metadata:
+  repository: gravitational.io
+  name: cluster-ssl-app
+  resourceVersion: 0.0.1
+  namespace: default
+hooks:
+  install:
+    spec:
+      apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: cluster-ssl-app-install
+      spec:
+        parallelism: 1
+        completions: 1
+        activeDeadlineSeconds: 100
+        template:
+          metadata:
+            name: cluster-ssl-app-install
+          spec:
+            restartPolicy: OnFailure
+            containers:
+              - name: install
+                image: cluster-ssl-hook:latest
+                args: ["install"]
+  uninstall:
+    spec:
+      apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: cluster-ssl-app-uninstall
+      spec:
+        parallelism: 1
+        completions: 1
+        activeDeadlineSeconds: 100
+        template:
+          metadata:
+            name: cluster-ssl-app-uninstall
+          spec:
+            restartPolicy: OnFailure
+            containers:
+              - name: uninstall
+                image: cluster-ssl-hook:latest
+                args: ["uninstall"]
