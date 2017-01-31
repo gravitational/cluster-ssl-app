@@ -4,7 +4,7 @@ metadata:
   repository: gravitational.io
   name: cluster-ssl-app
   resourceVersion: 0.0.1
-  namespace: default
+  namespace: kube-system
 hooks:
   install:
     spec:
