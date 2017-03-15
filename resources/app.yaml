@@ -5,7 +5,7 @@ metadata:
   resourceVersion: 0.0.1
 hooks:
   install:
-    spec:
+    job: |
       apiVersion: batch/v1
       kind: Job
       metadata:
@@ -24,7 +24,7 @@ hooks:
                 image: cluster-ssl-hook:latest
                 args: ["install"]
   uninstall:
-    spec:
+    job: |
       apiVersion: batch/v1
       kind: Job
       metadata:
