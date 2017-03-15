@@ -11,6 +11,7 @@ hooks:
       kind: Job
       metadata:
         name: cluster-ssl-app-install
+        namespace: default
       spec:
         parallelism: 1
         completions: 1
@@ -30,6 +31,7 @@ hooks:
       kind: Job
       metadata:
         name: cluster-ssl-app-uninstall
+        namespace: default
       spec:
         parallelism: 1
         completions: 1
