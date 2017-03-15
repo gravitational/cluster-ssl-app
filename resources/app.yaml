@@ -3,6 +3,7 @@ kind: SystemApplication
 metadata:
   name: cluster-ssl-app
   resourceVersion: 0.0.1
+  namespace: default
 hooks:
   install:
     job: |
@@ -42,3 +43,4 @@ hooks:
               - name: uninstall
                 image: cluster-ssl-hook:latest
                 args: ["uninstall"]
+
