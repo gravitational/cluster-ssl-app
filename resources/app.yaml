@@ -3,13 +3,15 @@ kind: SystemApplication
 metadata:
   name: cluster-ssl-app
   resourceVersion: 0.0.1
+  namespace: default
 hooks:
   install:
-    spec:
+    job: |
       apiVersion: batch/v1
       kind: Job
       metadata:
         name: cluster-ssl-app-install
+        namespace: default
       spec:
         parallelism: 1
         completions: 1
@@ -24,11 +26,12 @@ hooks:
                 image: cluster-ssl-hook:latest
                 args: ["install"]
   uninstall:
-    spec:
+    job: |
       apiVersion: batch/v1
       kind: Job
       metadata:
         name: cluster-ssl-app-uninstall
+        namespace: default
       spec:
         parallelism: 1
         completions: 1
@@ -42,3 +45,4 @@ hooks:
               - name: uninstall
                 image: cluster-ssl-hook:latest
                 args: ["uninstall"]
+
