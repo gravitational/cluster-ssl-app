@@ -17,7 +17,7 @@ $(HOOK_BINS):
 
 .PHONY: hook
 hook: $(HOOK_BINS)
-	docker build -t $(HOOK_TAG) $(PWD)/hook
+	docker build --pull -t $(HOOK_TAG) $(PWD)/hook
 
 .PHONY: clean
 clean:
