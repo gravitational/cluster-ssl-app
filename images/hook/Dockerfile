@@ -1,11 +1,21 @@
-FROM quay.io/gravitational/debian-tall:latest
+FROM quay.io/gravitational/debian-grande:latest
 
-RUN mkdir -p /root/cfssl
+RUN apt-get update && \
+    apt-get install --yes --no-install-recommends curl jq && \
+    curl https://pkg.cfssl.org/R1.2/cfssl_linux-amd64 -o /usr/local/bin/cfssl && \
+    curl  https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64 -o /usr/local/bin/cfssljson && \
+    mkdir -p /root/cfssl && \
+    apt-get clean && \
+    rm -rf \
+        /var/lib/apt/lists/* \
+        ~/.bashrc \
+        /usr/share/doc/ \
+        /usr/share/doc-base/ \
+        /usr/share/man/ \
+        /tmp/*
+
 ADD *.json /root/cfssl/
 
-ADD bin/cfssl \
-    bin/cfssljson  \
-        /usr/local/bin/
 RUN chmod a+x /usr/local/bin/cfssl*
 
 ADD hook.sh /hook.sh

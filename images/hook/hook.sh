@@ -8,6 +8,8 @@ if [ $1 = "install" ]; then
 
 	if kubectl get secret/cluster-ca ; then
 		echo "secret/cluster-ca already exists"
+        kubectl get secret cluster-ca -o json | jq -r '.data."ca.pem"' | base64 -d > ca.pem
+        kubectl get secret cluster-ca -o json | jq -r '.data."ca-key"' | base64 -d > ca-key.pam
 	else
 		cfssl gencert -initca ca-csr.json|cfssljson -bare ca -
 
@@ -18,7 +20,7 @@ if [ $1 = "install" ]; then
 	fi
 
 	if kubectl get secret/cluster-default-ssl ; then
-		echo "secret/cluster-ca already exists"
+		echo "secret/cluster-default-ssl already exists"
 	else
 		cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json \
 			-profile=server default-server-csr.json | cfssljson -bare default-server
@@ -64,4 +66,3 @@ else
 	exit 1
 
 fi
-
