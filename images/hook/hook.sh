@@ -9,7 +9,7 @@ if [ $1 = "install" ]; then
 	if kubectl get secret/cluster-ca ; then
 		echo "secret/cluster-ca already exists"
         kubectl get secret cluster-ca -o json | jq -r '.data."ca.pem"' | base64 -d > ca.pem
-        kubectl get secret cluster-ca -o json | jq -r '.data."ca-key"' | base64 -d > ca-key.pam
+        kubectl get secret cluster-ca -o json | jq -r '.data."ca-key"' | base64 -d > ca-key.pem
 	else
 		cfssl gencert -initca ca-csr.json|cfssljson -bare ca -
 
