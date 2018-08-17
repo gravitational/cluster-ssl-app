@@ -15,7 +15,7 @@ hooks:
       spec:
         parallelism: 1
         completions: 1
-        activeDeadlineSeconds: 100
+        activeDeadlineSeconds: 600
         template:
           metadata:
             name: cluster-ssl-app-install
@@ -35,7 +35,7 @@ hooks:
       spec:
         parallelism: 1
         completions: 1
-        activeDeadlineSeconds: 100
+        activeDeadlineSeconds: 600
         template:
           metadata:
             name: cluster-ssl-app-uninstall
@@ -45,4 +45,3 @@ hooks:
               - name: uninstall
                 image: cluster-ssl-hook:latest
                 args: ["uninstall"]
-
