@@ -1,4 +1,4 @@
-FROM quay.io/gravitational/debian-grande:latest
+FROM quay.io/gravitational/debian-grande:stretch
 
 RUN apt-get update && \
     apt-get install --yes --no-install-recommends curl jq && \
