@@ -2,6 +2,7 @@ VER ?= $(shell git describe --long --tags --always|awk -F'[.-]' '{print $$1 "." 
 REPOSITORY := gravitational.io
 NAME := cluster-ssl-app
 OPS_URL ?= https://opscenter.localhost.localdomain:33009
+# gravity uses `/var/lib/gravity` directory if state-dir is empty
 STATE_DIR ?=
 
 EXTRA_GRAVITY_OPTIONS ?=
