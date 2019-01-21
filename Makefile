@@ -2,6 +2,8 @@ VER ?= $(shell git describe --long --tags --always|awk -F'[.-]' '{print $$1 "." 
 REPOSITORY := gravitational.io
 NAME := cluster-ssl-app
 OPS_URL ?= https://opscenter.localhost.localdomain:33009
+# gravity uses `/var/lib/gravity` directory if state-dir is empty
+STATE_DIR ?=
 
 EXTRA_GRAVITY_OPTIONS ?=
 
@@ -10,6 +12,7 @@ CONTAINERS := cluster-ssl-hook:$(VER)
 IMPORT_IMAGE_FLAGS := --set-image=cluster-ssl-hook:$(VER)
 
 IMPORT_OPTIONS := --vendor \
+		--state-dir=$(STATE_DIR) \
 		--ops-url=$(OPS_URL) \
 		--insecure \
 		--repository=$(REPOSITORY) \
@@ -40,7 +43,7 @@ images:
 
 .PHONY: import
 import: images
-	-gravity app delete --ops-url=$(OPS_URL) $(REPOSITORY)/$(NAME):$(VER) --force --insecure $(EXTRA_GRAVITY_OPTIONS)
+	-gravity app delete --ops-url=$(OPS_URL) --state-dir=$(STATE_DIR) $(REPOSITORY)/$(NAME):$(VER) --force --insecure $(EXTRA_GRAVITY_OPTIONS)
 	gravity app import $(IMPORT_OPTIONS) $(EXTRA_GRAVITY_OPTIONS) .
 
 .PHONY: export
