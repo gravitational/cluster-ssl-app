@@ -11,6 +11,9 @@ CONTAINERS := cluster-ssl-hook:$(VER)
 
 IMPORT_IMAGE_FLAGS := --set-image=cluster-ssl-hook:$(VER)
 
+FILE_LIST := $(shell ls -1A)
+WHITELISTED_RESOURCE_NAMES := resources
+
 IMPORT_OPTIONS := --vendor \
 		--state-dir=$(STATE_DIR) \
 		--ops-url=$(OPS_URL) \
@@ -19,12 +22,7 @@ IMPORT_OPTIONS := --vendor \
 		--name=$(NAME) \
 		--version=$(VER) \
 		--glob=**/*.yaml \
-		--exclude="build" \
-		--exclude="gravity.log" \
-		--exclude="images" \
-		--exclude="Makefile" \
-		--exclude="tool" \
-		--exclude=".git" \
+		$(foreach resource, $(filter-out $(WHITELISTED_RESOURCE_NAMES), $(FILE_LIST)), --exclude="$(resource)") \
 		$(IMPORT_IMAGE_FLAGS)
 
 BUILD_DIR := build
