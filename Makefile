@@ -22,7 +22,6 @@ IMPORT_OPTIONS := --vendor \
 		--name=$(NAME) \
 		--version=$(VER) \
 		--glob=**/*.yaml \
-		# this line adds `--exclude='file/dir_name'` for everything except of 'resource' directory
 		$(foreach resource, $(filter-out $(WHITELISTED_RESOURCE_NAMES), $(FILE_LIST)), --exclude="$(resource)") \
 		$(IMPORT_IMAGE_FLAGS)
 
