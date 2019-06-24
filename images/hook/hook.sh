@@ -34,21 +34,6 @@ function create_certificate_secrets {
 			--from-file=default-server-key.pem=default-server-key.pem \
 			--from-file=default-server.csr=default-server.csr
 	fi
-
-	if kubectl get secret/cluster-kube-system-ssl ; then
-		echo "secret/cluster-kube-system-ssl already exists"
-	else
-		cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json \
-			  -profile=server kube-system-server-csr.json | cfssljson -bare kube-system-server
-		cp kube-system-server.pem kube-system-server-with-chain.pem
-		cat ca.pem >> kube-system-server-with-chain.pem
-
-		kubectl create secret generic cluster-kube-system-ssl \
-			--from-file=default-server.pem=default-server.pem \
-			--from-file=kube-system-server-with-chain.pem=kube-system-server-with-chain.pem \
-			--from-file=default-server-key.pem=default-server-key.pem \
-			--from-file=default-server.csr=default-server.csr
-	fi
 }
 
 cd /root/cfssl
@@ -57,25 +42,21 @@ if [[ $1 = "install" ]]; then
     create_certificate_secrets
 
 elif [[ $1 = "update" ]]; then
-    kubectl delete secret/cluster-ca --namespace=default
-    kubectl delete secret/cluster-default-ssl --namespace=default
-    kubectl delete secret/cluster-kube-system-ssl --namespace=kube-system
+    kubectl delete secret/cluster-ca --namespace=default --ignore-not-found
+    kubectl delete secret/cluster-default-ssl --namespace=default --ignore-not-found
+    kubectl delete secret/cluster-kube-system-ssl --namespace=default --ignore-not-found
     create_certificate_secrets
 
 elif [[ $1 = "uninstall" ]]; then
 
 	for sname in cluster-ca cluster-default-ssl cluster-kube-system-ssl
 	do
-		if kubectl get secret/$sname ; then
-			kubectl delete secret $sname
-		else
-			echo "secret/$sname already deleted"
-		fi
+		kubectl delete secret $sname --ignore-not-found
 	done
 
 else
 
-	echo "Missing argument, should be either 'install' or 'uninstall'"
+	echo "Missing argument, should be 'install', 'update' or 'uninstall'"
 	exit 1
 
 fi
