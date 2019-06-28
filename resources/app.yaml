@@ -22,6 +22,7 @@ hooks:
             name: cluster-ssl-app-install
           spec:
             restartPolicy: OnFailure
+            hostNetwork: true
             containers:
               - name: install
                 image: cluster-ssl-hook:latest
@@ -42,6 +43,7 @@ hooks:
             name: cluster-ssl-app-update
           spec:
             restartPolicy: OnFailure
+            hostNetwork: true
             containers:
               - name: update
                 image: cluster-ssl-hook:latest
@@ -62,6 +64,7 @@ hooks:
             name: cluster-ssl-app-uninstall
           spec:
             restartPolicy: OnFailure
+            hostNetwork: true
             containers:
               - name: uninstall
                 image: cluster-ssl-hook:latest
