@@ -1,7 +1,6 @@
+export VERSION ?= $(shell ./version.sh)
 TELE ?= $(shell which tele)
 GRAVITY ?= $(shell which gravity)
-RUNTIME_VERSION ?= $(shell $(TELE) version | awk '/^[vV]ersion:/ {print $$2}')
-VER ?= $(shell git describe --long --tags --always|awk -F'[.-]' '{print $$1 "." $$2 "." $$4}')-$(RUNTIME_VERSION)
 
 REPOSITORY := gravitational.io
 NAME := cluster-ssl-app
@@ -11,25 +10,24 @@ STATE_DIR ?=
 
 EXTRA_GRAVITY_OPTIONS ?=
 
-CONTAINERS := cluster-ssl-hook:$(VER)
+CONTAINERS := cluster-ssl-hook:$(VERSION)
 
-IMPORT_IMAGE_FLAGS := --set-image=cluster-ssl-hook:$(VER)
+IMPORT_IMAGE_FLAGS := --set-image=cluster-ssl-hook:$(VERSION)
 
 FILE_LIST := $(shell ls -1A)
 WHITELISTED_RESOURCE_NAMES := resources
 
 IMPORT_OPTIONS := --vendor \
-		--state-dir=$(STATE_DIR) \
 		--ops-url=$(OPS_URL) \
-		--insecure \
 		--repository=$(REPOSITORY) \
 		--name=$(NAME) \
-		--version=$(VER) \
+		--version=$(VERSION) \
 		--glob=**/*.yaml \
 		$(foreach resource, $(filter-out $(WHITELISTED_RESOURCE_NAMES), $(FILE_LIST)), --exclude="$(resource)") \
 		$(IMPORT_IMAGE_FLAGS)
 
 BUILD_DIR := build
+BINARIES_DIR := bin
 TARBALL := $(BUILD_DIR)/cluster-ssl-app.tar.gz
 
 .PHONY: all
@@ -37,15 +35,18 @@ all: clean images
 
 .PHONY: what-version
 what-version:
-	@echo $(VER)
+	@echo $(VERSION)
 
 .PHONY: images
 images:
-	cd images && $(MAKE) -f Makefile VERSION=$(VER)
+	cd $(PWD)/images &&	$(MAKE) VERSION=$(VERSION) && cd $(PWD)
+
+.PHONY: build-app
+build-app: images
 
 .PHONY: import
 import: images
-	-$(GRAVITY) app delete --ops-url=$(OPS_URL) --state-dir=$(STATE_DIR) $(REPOSITORY)/$(NAME):$(VER) --force --insecure $(EXTRA_GRAVITY_OPTIONS)
+	-$(GRAVITY) app delete --ops-url=$(OPS_URL) $(REPOSITORY)/$(NAME):$(VERSION) --force $(EXTRA_GRAVITY_OPTIONS)
 	$(GRAVITY) app import $(IMPORT_OPTIONS) $(EXTRA_GRAVITY_OPTIONS) .
 
 .PHONY: export
@@ -55,8 +56,19 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 $(TARBALL): import $(BUILD_DIR)
-	$(GRAVITY) package export $(REPOSITORY)/$(NAME):$(VER) $(TARBALL) $(EXTRA_GRAVITY_OPTIONS)
+	$(GRAVITY) package export $(REPOSITORY)/$(NAME):$(VERSION) $(TARBALL) $(EXTRA_GRAVITY_OPTIONS)
+
+$(BINARIES_DIR):
+	mkdir -p $(BINARIES_DIR)
+
+.PHONY: download-binaries
+download-binaries: $(BINARIES_DIR)
+	for name in gravity tele; \
+	do \
+		curl https://get.gravitational.io/telekube/bin/$(GRAVITY_VERSION)/linux/x86_64/$$name -o $(BINARIES_DIR)/$$name; \
+		chmod +x $(BINARIES_DIR)/$$name; \
+	done
 
 .PHONY: clean
 clean:
-	$(MAKE) -C images clean
+	rm -rf $(TARBALL)
