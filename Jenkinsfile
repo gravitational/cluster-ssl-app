@@ -105,6 +105,24 @@ node {
       }
     }
 
+    stage('export') {
+      if (params.IMPORT_APP_PACKAGE) {
+        withCredentials([
+          string(credentialsId: params.OPS_CENTER_CREDENTIALS, variable: 'API_KEY'),
+        ]) {
+          withEnv(MAKE_ENV) {
+            sh """
+            rm -rf ${TELE_STATE_DIR} && mkdir -p ${TELE_STATE_DIR}
+            tele logout ${EXTRA_GRAVITY_OPTIONS}
+            tele login ${EXTRA_GRAVITY_OPTIONS} -o ${OPS_URL} --token=${API_KEY}
+            make export"""
+          }
+        }
+      } else {
+        echo 'skipped application export'
+      }
+    }
+
     stage('upload application image to S3') {
       if (isProtectedBranch(env.TAG) && params.IMPORT_APP_PACKAGE) {
         withCredentials([usernamePassword(credentialsId: "${AWS_CREDENTIALS}", usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
