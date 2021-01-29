@@ -30,8 +30,13 @@ properties([
                  description: 'Appends "-${GRAVITY_VERSION}" to the tag to be published'),
     booleanParam(name: 'IMPORT_APP',
                  defaultValue: false,
-                 description: 'Import application to ops center'
-    ),
+                 description: 'Import application to ops center'),
+    string(name: 'S3_UPLOAD_PATH',
+           defaultValue: '',
+           description: 'S3 bucket and path to upload built application image. For example "builds.example.com/cluster-ssl-app".'),
+    booleanParam(name: 'IMPORT_APP_PACKAGE',
+                 defaultValue: false,
+                 description: 'Import application to S3 bucket'),
   ]),
 ])
 
@@ -99,6 +104,37 @@ node {
         echo 'skipped application import'
       }
     }
+
+    stage('export') {
+      if (params.IMPORT_APP_PACKAGE) {
+        withCredentials([
+          string(credentialsId: params.OPS_CENTER_CREDENTIALS, variable: 'API_KEY'),
+        ]) {
+          withEnv(MAKE_ENV) {
+            sh """
+            rm -rf ${TELE_STATE_DIR} && mkdir -p ${TELE_STATE_DIR}
+            tele logout ${EXTRA_GRAVITY_OPTIONS}
+            tele login ${EXTRA_GRAVITY_OPTIONS} -o ${OPS_URL} --token=${API_KEY}
+            make export"""
+          }
+        }
+      } else {
+        echo 'skipped application export'
+      }
+    }
+
+    stage('upload application image to S3') {
+      if (isProtectedBranch(env.TAG) && params.IMPORT_APP_PACKAGE) {
+        withCredentials([usernamePassword(credentialsId: "${AWS_CREDENTIALS}", usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+          def S3_URL = "s3://${S3_UPLOAD_PATH}/cluster-ssl-app-${APP_VERSION}.tar"
+          withEnv(MAKE_ENV + ["S3_URL=${S3_URL}"]) {
+            sh 'aws s3 cp --only-show-errors build/cluster-ssl-app.tar.gz ${S3_URL}'
+          }
+        }
+      } else {
+        echo 'skipped application import to S3'
+      }
+    }
   }
 }
 
@@ -108,4 +144,8 @@ void workspace(Closure body) {
       body()
     }
   }
+}
+
+def isProtectedBranch(branch_name) {
+  return (branch_name == 'master');
 }
