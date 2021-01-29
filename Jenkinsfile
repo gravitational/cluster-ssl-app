@@ -145,3 +145,7 @@ void workspace(Closure body) {
     }
   }
 }
+
+def isProtectedBranch(branch_name) {
+  return (branch_name == 'master');
+}
