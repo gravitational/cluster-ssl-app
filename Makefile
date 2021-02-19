@@ -1,14 +1,22 @@
-export VERSION ?= $(shell ./version.sh)
+ifeq ($(origin VERSION), undefined)
+# avoid ?= lazily evaluating version.sh (and thus rerunning the shell command several times)
+VERSION := $(shell ./version.sh)
+endif
+
 TELE ?= $(shell which tele)
 GRAVITY ?= $(shell which gravity)
 
 REPOSITORY := gravitational.io
 NAME := cluster-ssl-app
-OPS_URL ?= https://opscenter.localhost.localdomain:33009
+OPS_URL ?=
 # gravity uses `/var/lib/gravity` directory if state-dir is empty
-STATE_DIR ?=
+STATEDIR ?=
 
 EXTRA_GRAVITY_OPTIONS ?=
+# add state directory to the commands if STATEDIR variable not empty
+ifneq ($(STATEDIR),)
+	EXTRA_GRAVITY_OPTIONS +=  --state-dir=$(STATEDIR)
+endif
 
 CONTAINERS := cluster-ssl-hook:$(VERSION)
 
@@ -28,7 +36,10 @@ IMPORT_OPTIONS := --vendor \
 
 BUILD_DIR := build
 BINARIES_DIR := bin
-TARBALL := $(BUILD_DIR)/cluster-ssl-app.tar.gz
+TARBALL := $(BUILD_DIR)/application.tar
+
+$(STATEDIR):
+	mkdir -p $(STATEDIR)
 
 .PHONY: all
 all: clean images
@@ -45,7 +56,7 @@ images:
 build-app: images
 
 .PHONY: import
-import: images
+import: images | $(STATEDIR)
 	-$(GRAVITY) app delete --ops-url=$(OPS_URL) $(REPOSITORY)/$(NAME):$(VERSION) --force $(EXTRA_GRAVITY_OPTIONS)
 	$(GRAVITY) app import $(IMPORT_OPTIONS) $(EXTRA_GRAVITY_OPTIONS) .
 
@@ -55,7 +66,7 @@ export: $(TARBALL)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-$(TARBALL): import $(BUILD_DIR)
+$(TARBALL): import | $(BUILD_DIR)
 	$(GRAVITY) package export --ops-url=$(OPS_URL) $(REPOSITORY)/$(NAME):$(VERSION) $(TARBALL) $(EXTRA_GRAVITY_OPTIONS)
 
 $(BINARIES_DIR):
@@ -70,5 +81,9 @@ download-binaries: $(BINARIES_DIR)
 	done
 
 .PHONY: clean
-clean:
+clean: clean-state-dir
 	rm -rf $(TARBALL)
+	rm -rf $(BUILD_DIR)
+
+clean-state-dir:
+	-rm -rf $(STATEDIR)
