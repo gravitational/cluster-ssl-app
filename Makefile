@@ -10,7 +10,7 @@ REPOSITORY := gravitational.io
 NAME := cluster-ssl-app
 OPS_URL ?=
 # gravity uses `/var/lib/gravity` directory if state-dir is empty
-STATEDIR ?=
+STATEDIR ?= state
 
 EXTRA_GRAVITY_OPTIONS ?=
 # add state directory to the commands if STATEDIR variable not empty
@@ -82,7 +82,6 @@ download-binaries: $(BINARIES_DIR)
 
 .PHONY: clean
 clean: clean-state-dir
-	rm -rf $(TARBALL)
 	rm -rf $(BUILD_DIR)
 
 clean-state-dir:
