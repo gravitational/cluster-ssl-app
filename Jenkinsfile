@@ -13,14 +13,8 @@ properties([
     string(name: 'TAG',
            defaultValue: 'master',
            description: 'Git tag to build'),
-    string(name: 'OPS_URL',
-           defaultValue: 'https://ci-ops.gravitational.io',
-           description: 'Ops Center URL to download dependencies from'),
-    string(name: 'OPS_CENTER_CREDENTIALS',
-           defaultValue: 'CI_OPS_API_KEY',
-           description: 'Jenkins\' key containing the Ops Center Credentials'),
     string(name: 'GRAVITY_VERSION',
-           defaultValue: '7.0.12',
+           defaultValue: '7.0.30',
            description: 'gravity/tele binaries version'),
     string(name: 'EXTRA_GRAVITY_OPTIONS',
            defaultValue: '',
@@ -28,9 +22,6 @@ properties([
     booleanParam(name: 'ADD_GRAVITY_VERSION',
                  defaultValue: false,
                  description: 'Appends "-${GRAVITY_VERSION}" to the tag to be published'),
-    booleanParam(name: 'IMPORT_APP',
-                 defaultValue: false,
-                 description: 'Import application to ops center'),
     string(name: 'S3_UPLOAD_PATH',
            defaultValue: '',
            description: 'S3 bucket and path to upload built application image. For example "builds.example.com/cluster-ssl-app".'),
@@ -62,11 +53,9 @@ node {
 
     APP_VERSION = sh(script: 'make what-version', returnStdout: true).trim()
     APP_VERSION = params.ADD_GRAVITY_VERSION ? "${APP_VERSION}-${GRAVITY_VERSION}" : APP_VERSION
-    TELE_STATE_DIR = "${pwd()}/state/${APP_VERSION}"
+    STATEDIR = "${pwd()}/state/${APP_VERSION}"
     BINARIES_DIR = "${pwd()}/bin"
-    EXTRA_GRAVITY_OPTIONS = "--state-dir=${TELE_STATE_DIR} ${params.EXTRA_GRAVITY_OPTIONS}"
     MAKE_ENV = [
-      "EXTRA_GRAVITY_OPTIONS=${EXTRA_GRAVITY_OPTIONS}",
       "PATH+GRAVITY=${BINARIES_DIR}",
       "VERSION=${APP_VERSION}"
     ]
@@ -77,46 +66,12 @@ node {
       }
     }
 
-    stage('build-app') {
-      withCredentials([
-        string(credentialsId: params.OPS_CENTER_CREDENTIALS, variable: 'API_KEY'),
-      ]) {
-        withEnv(MAKE_ENV) {
-          sh """
-  rm -rf ${TELE_STATE_DIR} && mkdir -p ${TELE_STATE_DIR}
-  tele logout ${EXTRA_GRAVITY_OPTIONS}
-  tele login ${EXTRA_GRAVITY_OPTIONS} -o ${OPS_URL} --token=${API_KEY}
-  make build-app"""
-        }
-      }
-    }
-
-    stage('push') {
-      if (params.IMPORT_APP) {
-        withCredentials([
-          string(credentialsId: params.OPS_CENTER_CREDENTIALS, variable: 'API_KEY'),
-        ]) {
-          withEnv(MAKE_ENV) {
-            sh 'make import'
-          }
-        }
-      } else {
-        echo 'skipped application import'
-      }
-    }
-
     stage('export') {
       if (params.IMPORT_APP_PACKAGE) {
-        withCredentials([
-          string(credentialsId: params.OPS_CENTER_CREDENTIALS, variable: 'API_KEY'),
-        ]) {
-          withEnv(MAKE_ENV) {
-            sh """
-            rm -rf ${TELE_STATE_DIR} && mkdir -p ${TELE_STATE_DIR}
-            tele logout ${EXTRA_GRAVITY_OPTIONS}
-            tele login ${EXTRA_GRAVITY_OPTIONS} -o ${OPS_URL} --token=${API_KEY}
+        withEnv(MAKE_ENV) {
+          sh """
+            rm -rf ${STATEDIR} && mkdir -p ${STATEDIR}
             make export"""
-          }
         }
       } else {
         echo 'skipped application export'
@@ -128,7 +83,7 @@ node {
         withCredentials([usernamePassword(credentialsId: "${AWS_CREDENTIALS}", usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
           def S3_URL = "s3://${S3_UPLOAD_PATH}/cluster-ssl-app-${APP_VERSION}.tar"
           withEnv(MAKE_ENV + ["S3_URL=${S3_URL}"]) {
-            sh 'aws s3 cp --only-show-errors build/cluster-ssl-app.tar.gz ${S3_URL}'
+            sh 'aws s3 cp --only-show-errors build/cluster-ssl-app.tar ${S3_URL}'
           }
         }
       } else {
