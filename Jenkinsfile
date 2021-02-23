@@ -38,7 +38,7 @@ node {
         $class: 'GitSCM',
         branches: [[name: "${params.TAG}"]],
         doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-        extensions: scm.extensions,
+        extensions: scm.extensions + [[$class: 'CloneOption', noTags: false, reference: '', shallow: false]],
         submoduleCfg: [],
         userRemoteConfigs: scm.userRemoteConfigs,
       ])
