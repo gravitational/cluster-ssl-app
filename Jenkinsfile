@@ -28,6 +28,9 @@ properties([
     booleanParam(name: 'IMPORT_APP_PACKAGE',
                  defaultValue: false,
                  description: 'Import application to S3 bucket'),
+    booleanParam(name: 'BUILD_GRAVITY_APP',
+                 defaultValue: true,
+                 description: 'Generate a Gravity App tarball'),
   ]),
 ])
 
@@ -67,7 +70,7 @@ node {
     }
 
     stage('export') {
-      if (params.IMPORT_APP_PACKAGE) {
+      if (params.BUILD_GRAVITY_APP) {
         withEnv(MAKE_ENV) {
           sh """
             rm -rf ${STATEDIR} && mkdir -p ${STATEDIR}
@@ -79,7 +82,7 @@ node {
     }
 
     stage('upload application image to S3') {
-      if (isProtectedBranch(env.TAG) && params.IMPORT_APP_PACKAGE) {
+      if (isProtectedBranch(env.TAG) && params.IMPORT_APP_PACKAGE && params.BUILD_GRAVITY_APP) {
         withCredentials([usernamePassword(credentialsId: "${AWS_CREDENTIALS}", usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
           def S3_URL = "s3://${S3_UPLOAD_PATH}/cluster-ssl-app-${APP_VERSION}.tar"
           withEnv(MAKE_ENV + ["S3_URL=${S3_URL}"]) {
