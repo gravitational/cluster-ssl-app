@@ -75,6 +75,7 @@ node {
           sh """
             rm -rf ${STATEDIR} && mkdir -p ${STATEDIR}
             make export"""
+          archiveArtifacts "build/application.tar"
         }
       } else {
         echo 'skipped application export'
