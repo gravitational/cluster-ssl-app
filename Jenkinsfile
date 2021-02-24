@@ -7,7 +7,6 @@ def propagateParamsToEnv() {
   }
 }
 
-
 properties([
   disableConcurrentBuilds(),
   parameters([
@@ -36,14 +35,13 @@ properties([
 ])
 
 node {
-  skipDefaultCheckout()
   workspace {
     stage('checkout') {
       checkout([
         $class: 'GitSCM',
-        branches: [[name: "${params.TAG}"]],
+        //branches: [[name: "${params.TAG}"]],
         doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-        extensions: scm.extensions + [[$class: 'CloneOption', noTags: false, reference: '', shallow: false]],
+        extensions: scm.extensions + [[$class: 'CloneOption', noTags: false, shallow: false], [$class: 'WipeWorkspace']],
         submoduleCfg: [],
         userRemoteConfigs: scm.userRemoteConfigs,
       ])
