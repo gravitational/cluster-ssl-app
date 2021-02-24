@@ -41,9 +41,9 @@ node {
     stage('checkout') {
       checkout([
         $class: 'GitSCM',
-        //branches: [[name: "${params.TAG}"]],
+        branches: scm.branches,
         doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
-        extensions: scm.extensions + [[$class: 'CloneOption', noTags: false, shallow: false], [$class: 'WipeWorkspace']],
+        extensions: [[$class: 'CloneOption', noTags: false, shallow: false]],
         submoduleCfg: [],
         userRemoteConfigs: scm.userRemoteConfigs,
       ])
