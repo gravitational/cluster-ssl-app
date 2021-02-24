@@ -36,6 +36,7 @@ properties([
 ])
 
 node {
+  skipDefaultCheckout()
   workspace {
     stage('checkout') {
       checkout([
