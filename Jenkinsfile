@@ -12,7 +12,7 @@ properties([
   disableConcurrentBuilds(),
   parameters([
     string(name: 'TAG',
-           defaultValue: 'master',
+           defaultValue: '',
            description: 'Git tag to build'),
     string(name: 'GRAVITY_VERSION',
            defaultValue: '7.0.30',
@@ -39,9 +39,18 @@ node {
   skipDefaultCheckout()
   workspace {
     stage('checkout') {
+      print 'Running stage Checkout source'
+
+      def branches
+      if (params.TAG == '') { // No tag specified
+        branches = scm.branches
+      } else {
+        branches = [[name: "refs/tags/${params.TAG}"]]
+      }
+
       checkout([
         $class: 'GitSCM',
-        branches: scm.branches,
+        branches: branches,
         doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
         extensions: [[$class: 'CloneOption', noTags: false, shallow: false]],
         submoduleCfg: [],
