@@ -116,6 +116,22 @@ void workspace(Closure body) {
   }
 }
 
-def isProtectedBranch(branch_name) {
-  return (branch_name == 'master');
+def isProtectedBranch(branchOrTagName) {
+  // check if tag or branch empty
+  if (!branchOrTagName?.trim()) {
+    return false
+  }
+
+  String[] protectedBranches = ['master']
+
+  protectedBranches.each { protectedBranch ->
+    if (branchOrTagName == "${protectedBranch}") {
+      return true;
+    }
+    def status = sh(script: "git branch --contains=${branchOrTagName} | grep '[*[:space:]]*${protectedBranch}\$'", returnStatus: true)
+    if (status == 0) {
+      return true
+    }
+  }
+  return false
 }
