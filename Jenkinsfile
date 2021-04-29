@@ -123,7 +123,7 @@ def isProtectedBranch(branchOrTagName) {
     if (branchOrTagName == ${protectedBranch}) {
       return true;
     }
-    def status = sh(script: "git branch --contains=${branchOrTagName} | grep '[*[:space:]]*${protectedBranch}$'", returnStatus: true)
+    def status = sh(script: "git branch --contains=${branchOrTagName} | grep '[*[:space:]]*${protectedBranch}\$'", returnStatus: true)
     if (status == 0) {
       return true
     }
