@@ -26,7 +26,7 @@ properties([
     string(name: 'S3_UPLOAD_PATH',
            defaultValue: '',
            description: 'S3 bucket and path to upload built application image. For example "builds.example.com/cluster-ssl-app".'),
-    booleanParam(name: 'IMPORT_APP_PACKAGE',
+    booleanParam(name: 'PUBLISH_APP_PACKAGE',
                  defaultValue: false,
                  description: 'Import application to S3 bucket'),
     booleanParam(name: 'BUILD_GRAVITY_APP',
@@ -94,12 +94,10 @@ node {
     }
 
     stage('upload application image to S3') {
-      if (isProtectedBranch(env.TAG) && params.IMPORT_APP_PACKAGE && params.BUILD_GRAVITY_APP) {
+      if (isProtectedBranch(env.TAG) && params.PUBLISH_APP_PACKAGE && params.BUILD_GRAVITY_APP) {
         withCredentials([usernamePassword(credentialsId: "${AWS_CREDENTIALS}", usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-          def S3_URL = "s3://${S3_UPLOAD_PATH}/cluster-ssl-app-${APP_VERSION}.tar"
-          withEnv(MAKE_ENV + ["S3_URL=${S3_URL}"]) {
-            sh 'aws s3 cp --only-show-errors build/cluster-ssl-app.tar ${S3_URL}'
-          }
+          def s3Url = "s3://${S3_UPLOAD_PATH}/cluster-ssl-app:${APP_VERSION}.tar"
+          sh "aws s3 cp --only-show-errors build/application.tar ${s3Url}"
         }
       } else {
         echo 'skipped application import to S3'
@@ -122,16 +120,12 @@ def isProtectedBranch(branchOrTagName) {
     return false
   }
 
-  String[] protectedBranches = ['master']
+  String[] protectedBranches = ['master', 'support/.*']
 
-  protectedBranches.each { protectedBranch ->
-    if (branchOrTagName == "${protectedBranch}") {
-      return true;
-    }
-    def status = sh(script: "git branch --contains=${branchOrTagName} | grep '[*[:space:]]*${protectedBranch}\$'", returnStatus: true)
-    if (status == 0) {
-      return true
-    }
+  return protectedBranches.any { protectedBranch ->
+    if (branchOrTagName == protectedBranch) return true
+    def status = sh(script: "git branch --all --contains=${branchOrTagName} | grep '[*[:space:]]*remotes/origin/${protectedBranch}\$'", returnStatus: true)
+    return status == 0
   }
   return false
 }
