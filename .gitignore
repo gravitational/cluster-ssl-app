@@ -2,3 +2,5 @@
 gravity.log
 build
 registry
+bin/
+state/
