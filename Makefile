@@ -6,7 +6,7 @@ endif
 TELE ?= $(shell which tele)
 GRAVITY ?= $(shell which gravity)
 GRAVITY_VERSION ?= 8.0.10
-DOCKER_REPOSITORY_PREFIX ?= "172.28.128.101:30050"
+DOCKER_REPOSITORY_PREFIX ?= private.registry
 
 REPOSITORY := gravitational.io
 NAME := cluster-ssl-app
@@ -62,12 +62,11 @@ docker-push:
 
 .PHONY: helm-install
 helm-install:
-	helm --kubeconfig ~/go/src/github.com/mulesoft/rke2-playground/ansible/kubeconfig.yaml install cluster-ssl resources/chart \
-		--values resources/custom-values.yaml --set "image.tag=$(VERSION)" --set "image.repository=$(DOCKER_REPOSITORY_PREFIX)/cluster-ssl-hook"
+	helm install cluster-ssl resources/chart --set "image.tag=$(VERSION)" --set "image.repository=$(DOCKER_REPOSITORY_PREFIX)/cluster-ssl-hook"
 
 .PHONY: helm-uninstall
 helm-uninstall:
-	helm --kubeconfig ~/go/src/github.com/mulesoft/rke2-playground/ansible/kubeconfig.yaml uninstall cluster-ssl
+	helm uninstall cluster-ssl
 
 .PHONY: build-app
 build-app: images

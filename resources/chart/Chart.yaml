@@ -1,4 +1,4 @@
-apiVersion: v2
+apiVersion: v1
 name: cluster-ssl
 description: A Helm chart to deploy secrets for PCE applications
 type: application

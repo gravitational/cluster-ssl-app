@@ -36,9 +36,6 @@ spec:
             - kubectl delete secrets cluster-ca cluster-default-ssl
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          volumeMounts:
-            - name: kubectl
-              mountPath: /usr/local/bin/kubectl
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -51,8 +48,3 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      volumes:
-        - name: kubectl
-          hostPath:
-            type: File
-            path: /var/lib/rancher/rke2/bin/kubectl

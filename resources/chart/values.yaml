@@ -1,5 +1,5 @@
 image:
-  repository: nginx
+  repository: cluster-ssl
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
