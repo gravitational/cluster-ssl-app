@@ -1,0 +1,8 @@
+product: pce
+component: cluster-ssl
+asset: app
+strategy: helm
+version: 1.0
+
+requires:
+  deployment: false
